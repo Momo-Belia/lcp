@@ -14,13 +14,21 @@ def get_weather(city:str):
         "lang": "zh_cn"  
     }
     resp = requests.get(url,params=params)
-    if resp.status_code == 200: 
-        data = resp.json()
-        weather = data["weather"][0]["description"]
-        temp = data["main"]["temp"]
-        temp_max = data["main"]["temp_max"]
-        temp_min = data["main"]["temp_min"]
-    return f"{city}的天气是{weather}，气温是{temp},气温范围{temp_min}-{temp_max}"
+    try:
+        resp = requests.get(url, params=params, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            desc = data["weather"][0]["description"]
+            temp = data["main"]["temp"]
+            feels_like = data["main"]["feels_like"]
+            humidity = data["main"]["humidity"]
+            return f"{city} 当前天气：{desc}，气温 {temp}°C，体感 {feels_like}°C，湿度 {humidity}%。"
+        elif resp.status_code == 404:
+            return f"未找到城市“{city}”的天气数据，请检查城市名称。"
+        else:
+            return f"天气查询失败，HTTP 状态码：{resp.status_code}"
+    except requests.RequestException as e:
+        return f"请求天气服务时出错：{e}"
 
 city = input("pleast type city name: ")
 
